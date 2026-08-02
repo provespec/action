@@ -1,0 +1,76 @@
+name: 'ProveSpec parity gate'
+description: 'Grade this repository against a published specification and fail the build when parity drops.'
+author: 'ProveSpec'
+branding:
+  icon: 'check-square'
+  color: 'green'
+
+inputs:
+  spec:
+    description: 'Catalog slug to grade against, e.g. "todomvc". Browse them at https://provespec.com/catalog/'
+    required: true
+  grades:
+    description: 'Path to the JSON file holding this repo''s self-assessment (see README for the format).'
+    required: false
+    default: '.provespec/grades.json'
+  scope:
+    description: 'Restrict to one top-level group of the spec, e.g. "AI" for engine-only parity.'
+    required: false
+  min:
+    description: 'Fail when parity is below this percentage.'
+    required: false
+  no-regression:
+    description: 'Fail when parity drops versus the parity recorded in the grades file.'
+    required: false
+    default: 'false'
+  tolerance:
+    description: 'Points of drop tolerated by no-regression.'
+    required: false
+    default: '0'
+  badge:
+    description: 'Write an SVG badge to this path. Empty to skip.'
+    required: false
+    default: ''
+  site:
+    description: 'Catalog to read from. Override only for mirrors or testing.'
+    required: false
+    default: 'https://provespec.com'
+
+outputs:
+  parity:
+    description: 'Parity percentage, or empty when nothing was comparable.'
+    value: ${{ steps.gate.outputs.parity }}
+  has:
+    description: 'Capabilities fully implemented.'
+    value: ${{ steps.gate.outputs.has }}
+  declares:
+    description: 'Capabilities the spec declares in scope.'
+    value: ${{ steps.gate.outputs.declares }}
+  missing:
+    description: 'Capabilities graded missing.'
+    value: ${{ steps.gate.outputs.missing }}
+  partial:
+    description: 'Capabilities graded partial.'
+    value: ${{ steps.gate.outputs.partial }}
+  ungraded:
+    description: 'Spec capabilities with no grade — counted as missing.'
+    value: ${{ steps.gate.outputs.ungraded }}
+  report:
+    description: 'Markdown report path.'
+    value: ${{ steps.gate.outputs.report }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: gate
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/gate.mjs"
+      env:
+        INPUT_SPEC: ${{ inputs.spec }}
+        INPUT_GRADES: ${{ inputs.grades }}
+        INPUT_SCOPE: ${{ inputs.scope }}
+        INPUT_MIN: ${{ inputs.min }}
+        INPUT_NO_REGRESSION: ${{ inputs.no-regression }}
+        INPUT_TOLERANCE: ${{ inputs.tolerance }}
+        INPUT_BADGE: ${{ inputs.badge }}
+        INPUT_SITE: ${{ inputs.site }}

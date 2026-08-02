@@ -1,0 +1,4 @@
+node_modules/
+*.log
+.provespec-report.md
+badges/

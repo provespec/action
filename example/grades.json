@@ -1,0 +1,15 @@
+{
+  "product": "example todo build",
+  "parity": 89,
+  "grades": [
+    { "path": ["AI", "Model", "Todo item shape"], "status": "yes", "note": "src/model.ts — id, title, completed" },
+    { "path": ["AI", "Model", "Add todo"], "status": "yes", "note": "src/model.ts:12 — trims, ignores empty" },
+    { "path": ["AI", "Model", "Edit todo title"], "status": "yes", "note": "src/model.ts:28 — empty deletes" },
+    { "path": ["AI", "Model", "Toggle completed"], "status": "yes", "note": "src/model.ts:41" },
+    { "path": ["AI", "Model", "Toggle all"], "status": "yes", "note": "src/model.ts:48" },
+    { "path": ["AI", "Model", "Delete todo"], "status": "yes", "note": "src/model.ts:55" },
+    { "path": ["AI", "Model", "Clear completed"], "status": "yes", "note": "src/model.ts:61" },
+    { "path": ["AI", "Persistence", "Todos survive reload"], "status": "yes", "note": "src/store.ts — localStorage" },
+    { "path": ["AI", "Routing", "Filter routes"], "status": "yes", "note": "src/router.ts — #/, #/active, #/completed" }
+  ]
+}
