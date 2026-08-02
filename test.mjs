@@ -13,6 +13,7 @@ const HERE = join(fileURLToPath(import.meta.url), '..')
 const SITE = process.env.PROVESPEC_SITE ?? 'https://provespec.com'
 
 let passed = 0
+let skipped = 0
 const test = (name, fn) => {
   try {
     fn()
@@ -21,6 +22,21 @@ const test = (name, fn) => {
     console.error(`FAIL ${name}\n  ${err.message}`)
     process.exitCode = 1
   }
+}
+
+// The end-to-end tests read a real spec over the network. If the catalog is
+// unreachable that is an outage, not a defect in this action — skip loudly
+// rather than turning CI red for someone else's incident.
+const catalogUp = await fetch(`${SITE}/specs.json`, { signal: AbortSignal.timeout(15000) })
+  .then((r) => r.ok)
+  .catch(() => false)
+const liveTest = (name, fn) => {
+  if (!catalogUp) {
+    console.warn(`SKIP ${name} — ${SITE} unreachable`)
+    skipped++
+    return
+  }
+  test(name, fn)
 }
 
 /** Run the action step in a scratch workspace; returns {code, out, err, summary, outputs}. */
@@ -102,7 +118,7 @@ const FULL_AI = [
   ['AI', 'Routing', 'Filter routes']
 ].map((path) => ({ path, status: 'yes', note: 'src/model.ts' }))
 
-test('a complete implementation passes the floor and reports 100%', () => {
+liveTest('a complete implementation passes the floor and reports 100%', () => {
   const r = runGate({ product: 'test-build', grades: FULL_AI }, { SPEC: 'todomvc', SCOPE: 'AI', MIN: '80' })
   assert.equal(r.code, 0, r.err)
   assert.equal(r.outputs.parity, '100')
@@ -110,7 +126,7 @@ test('a complete implementation passes the floor and reports 100%', () => {
   assert.match(r.summary, /✅ passed/)
 })
 
-test('an incomplete implementation fails and names what to close', () => {
+liveTest('an incomplete implementation fails and names what to close', () => {
   const r = runGate({ product: 'test-build', grades: FULL_AI.slice(0, 3) }, { SPEC: 'todomvc', SCOPE: 'AI', MIN: '80' })
   assert.equal(r.code, 1)
   assert.equal(r.outputs.parity, '33')
@@ -121,7 +137,7 @@ test('an incomplete implementation fails and names what to close', () => {
   assert.match(r.err, /AI > Routing > Filter routes/)
 })
 
-test('no-regression compares against the parity recorded in the grades file', () => {
+liveTest('no-regression compares against the parity recorded in the grades file', () => {
   const r = runGate(
     { product: 'test-build', parity: 100, grades: FULL_AI.slice(0, 8) },
     { SPEC: 'todomvc', SCOPE: 'AI', NO_REGRESSION: 'true' }
@@ -130,7 +146,7 @@ test('no-regression compares against the parity recorded in the grades file', ()
   assert.match(r.err, /parity dropped 11 points \(100% → 89%\)/)
 })
 
-test('the badge lands where asked, with the score in it', () => {
+liveTest('the badge lands where asked, with the score in it', () => {
   const r = runGate({ grades: FULL_AI }, { SPEC: 'todomvc', SCOPE: 'AI', BADGE: 'badges/parity.svg' })
   assert.equal(r.code, 0, r.err)
   const svg = readFileSync(join(r.dir, 'badges', 'parity.svg'), 'utf-8')
@@ -145,17 +161,17 @@ test('a missing grades file explains the format instead of crashing', () => {
   assert.match(r.err, /"status": "yes"/)
 })
 
-test('an unknown scope names the groups the spec actually has', () => {
+liveTest('an unknown scope names the groups the spec actually has', () => {
   const r = runGate({ grades: FULL_AI }, { SPEC: 'todomvc', SCOPE: 'Engine' })
   assert.equal(r.code, 2)
   assert.match(r.err, /Groups in this spec: AI, UI/)
 })
 
-test('an unknown spec points at the catalog', () => {
+liveTest('an unknown spec points at the catalog', () => {
   const r = runGate({ grades: FULL_AI }, { SPEC: 'no-such-spec-here' })
   assert.equal(r.code, 2)
   assert.match(r.err, /HTTP 404/)
   assert.match(r.err, /catalog/)
 })
 
-console.log(`${passed} tests passed`)
+console.log(`${passed} tests passed${skipped ? `, ${skipped} skipped (catalog unreachable)` : ''}`)
