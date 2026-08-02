@@ -92,4 +92,7 @@ Then put the badge in your README:
 ![parity](badges/parity.svg)
 ```
 
-MIT.
+## Licence
+
+MIT for this action. The specifications it grades against are CC BY 4.0 — see
+https://provespec.com.
