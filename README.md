@@ -7,7 +7,7 @@ No install step and no dependencies: it runs on the runner's Node, fetches the s
 HTTPS, and computes the score locally.
 
 ```yaml
-- uses: AlanKharebov/provespec-action@v1
+- uses: provespec/action@v1
   with:
     spec: todomvc          # https://provespec.com/catalog/todomvc/
     scope: AI              # engine-only parity; omit for the whole spec
@@ -39,7 +39,7 @@ The spec lives in the catalog; your verdicts live in your repo, at
 - **Capabilities you leave out count as missing.** The gate cannot be passed by omission.
 
 Generating that file is the agent's job, not yours. With the
-[MCP server](https://github.com/AlanKharebov/provespec-mcp) registered, ask any agent to
+[MCP server](https://github.com/provespec/mcp) registered, ask any agent to
 "grade this repo against the todomvc spec and write `.provespec/grades.json`", and it will
 walk the checklist with file-level evidence.
 
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: parity
-        uses: AlanKharebov/provespec-action@v1
+        uses: provespec/action@v1
         with:
           spec: todomvc
           scope: AI
